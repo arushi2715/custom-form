@@ -24,7 +24,9 @@ exports.addcustomer = async (req, res) => {
     phone.length === 0 ||
     account.length === 0
   )
-    return res.json("Please fill all the fields");
+    return res
+      .status(400)
+      .json({ status: 400, message: "Please fill all the fields" });
   const phonenumber = /^\d{10}$/;
   if (!phonenumber.test(phone))
     return res.status(400).json({
@@ -33,23 +35,30 @@ exports.addcustomer = async (req, res) => {
     });
   const mail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
   if (!mail.test(email))
-    return res.json("Please enter the email in correct format");
+    return res.status(400).json({
+      status: 400,
+      message: "Please enter the email in correct format",
+    });
   if (
     !(
       account.toLowerCase() == "Electronics".toLowerCase() ||
       account.toLowerCase() == "Toys".toLowerCase()
     )
   )
-    return res.json("Please select a valid account type");
+    return res
+      .status(400)
+      .json({ status: 400, message: "Please select a valid account type" });
   const findemail = await Form.find({ email: email });
   const key = Object.keys(findemail);
-  for (i of key)
-    if (findemail[i].account === req.body.account) {
+  for (i of key) {
+    const accountfound = findemail[i].account;
+    if (accountfound.toLowerCase() == account.toLowerCase()) {
       return res.status(400).json({
         status: 400,
         message: `Customer with this email already exists in ${findemail[i].account} account`,
       });
     }
+  }
   if (obj === undefined) {
     const formdata = new Form({
       name: name,
@@ -58,7 +67,6 @@ exports.addcustomer = async (req, res) => {
       phoneNumber: phone,
     });
     try {
-      console.log(formdata);
       formdata.save((err, result) => {
         if (err) {
           return res.status(500).json({ status: 500, message: err.message });
